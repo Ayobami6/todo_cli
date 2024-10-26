@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"os"
 	"strconv"
 	"time"
 
@@ -33,33 +34,12 @@ func generateUniqueRandomIntegers(n int) string {
 
 func configure() {
 
-	banner := `	
-                                                                                                                                      
-                                                 dddddddd                                                                             
-TTTTTTTTTTTTTTTTTTTTTTT                          d::::::d                              CCCCCCCCCCCCCLLLLLLLLLLL             IIIIIIIIII
-T:::::::::::::::::::::T                          d::::::d                           CCC::::::::::::CL:::::::::L             I::::::::I
-T:::::::::::::::::::::T                          d::::::d                         CC:::::::::::::::CL:::::::::L             I::::::::I
-T:::::TT:::::::TT:::::T                          d:::::d                         C:::::CCCCCCCC::::CLL:::::::LL             II::::::II
-TTTTTT  T:::::T  TTTTTTooooooooooo       ddddddddd:::::d    ooooooooooo         C:::::C       CCCCCC  L:::::L                 I::::I  
-        T:::::T      oo:::::::::::oo   dd::::::::::::::d  oo:::::::::::oo      C:::::C                L:::::L                 I::::I  
-        T:::::T     o:::::::::::::::o d::::::::::::::::d o:::::::::::::::o     C:::::C                L:::::L                 I::::I  
-        T:::::T     o:::::ooooo:::::od:::::::ddddd:::::d o:::::ooooo:::::o     C:::::C                L:::::L                 I::::I  
-        T:::::T     o::::o     o::::od::::::d    d:::::d o::::o     o::::o     C:::::C                L:::::L                 I::::I  
-        T:::::T     o::::o     o::::od:::::d     d:::::d o::::o     o::::o     C:::::C                L:::::L                 I::::I  
-        T:::::T     o::::o     o::::od:::::d     d:::::d o::::o     o::::o     C:::::C                L:::::L                 I::::I  
-        T:::::T     o::::o     o::::od:::::d     d:::::d o::::o     o::::o      C:::::C       CCCCCC  L:::::L         LLLLLL  I::::I  
-      TT:::::::TT   o:::::ooooo:::::od::::::ddddd::::::ddo:::::ooooo:::::o       C:::::CCCCCCCC::::CLL:::::::LLLLLLLLL:::::LII::::::II
-      T:::::::::T   o:::::::::::::::o d:::::::::::::::::do:::::::::::::::o        CC:::::::::::::::CL::::::::::::::::::::::LI::::::::I
-      T:::::::::T    oo:::::::::::oo   d:::::::::ddd::::d oo:::::::::::oo           CCC::::::::::::CL::::::::::::::::::::::LI::::::::I
-      TTTTTTTTTTT      ooooooooooo      ddddddddd   ddddd   ooooooooooo                CCCCCCCCCCCCCLLLLLLLLLLLLLLLLLLLLLLLLIIIIIIIIII
-                                                                                                                                      
-                                                                                                                                                                                                                                                            
-                                                                                                                                      
-                                                                                                                                      
-                                                                                                                Sparky Inc. 2024
-	`
-	fmt.Println(banner)
-
+	byteValue, rErr := os.ReadFile("banner.txt")
+	if rErr != nil {
+		log.Println(rErr)
+	} else {
+		fmt.Println(string(byteValue))
+	}
 	var passcode, generatedPasscode string
 
 	fmt.Println("Press 1 to Enter your passcode")
