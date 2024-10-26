@@ -2,12 +2,15 @@ package db
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"sync"
 	"time"
 
 	"github.com/Ayobami6/todo_cli/utils"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -48,6 +51,38 @@ func (u *UserRepo) saveUser(passcode string) error {
 		return err
 	}
 	return nil
+}
+
+func (u *UserRepo) findOne(passcode string) (*User, error) {
+	collection := u.db.Database("todo").Collection("users")
+	var result bson.M
+	err := collection.FindOne(context.TODO(), bson.D{{Key: "passcode", Value: passcode}}).Decode(&result)
+	if err == mongo.ErrNoDocuments {
+		return nil, errors.New("user not found")
+	}
+	if err != nil {
+		return nil, err
+	}
+	// jsonify the data
+	jsonData, err := json.MarshalIndent(result, "", "    ")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("%s\n", jsonData)
+	return NewUser(result["passcode"].(string)), nil
+}
+
+func FetchUser(passcode string) (*User, error) {
+	userRepo, err := NewUserRepo()
+	if err != nil {
+		return nil, err
+	}
+	user, err := userRepo.findOne(passcode)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+
 }
 
 func SaveUser(passcode string) {

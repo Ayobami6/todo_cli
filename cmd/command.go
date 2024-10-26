@@ -79,12 +79,17 @@ TTTTTT  T:::::T  TTTTTTooooooooooo       ddddddddd:::::d    ooooooooooo         
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Println("Passcode: ", passcode)
+		user, err := db.FetchUser(passcode)
+		if err != nil {
+			log.Fatal(err)
+		}
+		viper.Set("passcode", user.Passcode)
+		fmt.Println("Configuration successful")
 	case "2":
 		generatedPasscode = generateUniqueRandomIntegers(4)
 		// set passcode to viper
 		viper.Set("passcode", generatedPasscode)
-		db.SaveUser(passcode)
+		db.SaveUser(generatedPasscode)
 		err := viper.WriteConfigAs("config.json") // Writes to a config file
 		if err != nil {
 			// Error handling if writing fails
