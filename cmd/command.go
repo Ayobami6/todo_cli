@@ -84,6 +84,7 @@ TTTTTT  T:::::T  TTTTTTooooooooooo       ddddddddd:::::d    ooooooooooo         
 		generatedPasscode = generateUniqueRandomIntegers(4)
 		// set passcode to viper
 		viper.Set("passcode", generatedPasscode)
+		db.SaveUser(passcode)
 		err := viper.WriteConfigAs("config.json") // Writes to a config file
 		if err != nil {
 			// Error handling if writing fails
@@ -126,7 +127,7 @@ var CompleteCommand = &cobra.Command{
 }
 
 var ConfigureCommand = &cobra.Command{
-	Use:   "config",
+	Use:   "configure",
 	Short: "Configure the application",
 	Run: func(cmd *cobra.Command, args []string) {
 		configure()

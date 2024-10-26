@@ -19,6 +19,49 @@ type Task struct {
 	IsComplete  bool
 }
 
+type User struct {
+	Passcode string
+}
+
+func NewUser(passcode string) *User {
+	return &User{
+		Passcode: passcode,
+	}
+}
+
+type UserRepo struct {
+	db *mongo.Client
+}
+
+func NewUserRepo() (*UserRepo, error) {
+	client, err := GetClient()
+	if err != nil {
+		return nil, err
+	}
+	return &UserRepo{db: client}, nil
+}
+
+func (u *UserRepo) saveUser(passcode string) error {
+	collection := u.db.Database("todo").Collection("users")
+	_, err := collection.InsertOne(context.TODO(), NewUser(passcode))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func SaveUser(passcode string) {
+	userRepo, err := NewUserRepo()
+	if err != nil {
+		log.Fatalf("error saving user")
+	}
+	err = userRepo.saveUser(passcode)
+	if err != nil {
+		panic("error saving user")
+	}
+
+}
+
 var (
 	clientInstance *mongo.Client
 	clientOnce     sync.Once
