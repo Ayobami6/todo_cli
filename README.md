@@ -19,6 +19,7 @@ wget https://raw.githubusercontent.com/Ayobami6/todo_cli/refs/heads/master/insta
 - Install 
 
 ```sh
+chmod u+x install.sh
 ./install.sh
 ```
 - Configure the application
@@ -26,6 +27,10 @@ wget https://raw.githubusercontent.com/Ayobami6/todo_cli/refs/heads/master/insta
 ```sh
 tasks configure
 ```
+![img](assets/td.png)
+
+Generate your passcode and start using the todo cli
+
 
 
 
