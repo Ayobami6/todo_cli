@@ -116,13 +116,14 @@ var ListCommand = &cobra.Command{
 		}
 		table := tablewriter.NewWriter(os.Stdout)
 		table.SetHeader([]string{"ID", "Task", "Created", "Done"})
+		showAll, _ := cmd.Flags().GetBool("all")
 		if len(tasks) == 0 {
 			log.Fatal("tasks is empty")
 		}
 		for _, task := range tasks {
-			if !task.IsComplete {
+			if showAll || !task.IsComplete {
 				row := []string{
-					(task.ID).String(),
+					task.ID,
 					task.Description,
 					timediff.TimeDiff(task.CreatedAt),
 					strconv.FormatBool(task.IsComplete),
@@ -134,10 +135,17 @@ var ListCommand = &cobra.Command{
 	},
 }
 var CompleteCommand = &cobra.Command{
-	Use:   "complete",
+	Use:   "complete [task id]",
 	Short: "Mark a task as complete",
+	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		// Implement the logic to mark a task as complete
+		userPasscode := viper.GetString("passcode")
+		taskId := args[0]
+		err := db.CompleteTask(userPasscode, taskId)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println("Task marked as complete")
 	},
 }
 
@@ -154,4 +162,5 @@ func init() {
 	RootCmd.AddCommand(ListCommand)
 	RootCmd.AddCommand(CompleteCommand)
 	RootCmd.AddCommand(ConfigureCommand)
+	ListCommand.Flags().BoolP("all", "a", false, "Show all tasks (including completed ones)")
 }

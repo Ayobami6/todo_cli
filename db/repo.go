@@ -12,12 +12,13 @@ import (
 	"github.com/Ayobami6/todo_cli/utils"
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type Task struct {
-	ID           uuid.UUID
+	ID           string
 	Description  string
 	CreatedAt    time.Time
 	IsComplete   bool
@@ -124,7 +125,7 @@ func GetClient() (*mongo.Client, error) {
 
 func NewTask(description string, userPasscode string) *Task {
 	return &Task{
-		ID:           uuid.New(),
+		ID:           uuid.New().String(),
 		Description:  description,
 		CreatedAt:    time.Now(),
 		IsComplete:   false,
@@ -161,12 +162,76 @@ func (t *TaskRepo) findAll(userPasscode string) ([]Task, error) {
 	return tasks, nil
 }
 
+func (t *TaskRepo) findOneTask(userPasscode string, taskId string) (*Task, error) {
+	collection := t.db.Database("todo").Collection("tasks")
+	filter := bson.D{{"userpasscode", userPasscode}, {"id", taskId}}
+	var result bson.M
+	// find the task
+	err := collection.FindOne(context.Background(), filter).Decode(&result)
+	if err == mongo.ErrNoDocuments {
+		return nil, errors.New("task not found")
+	}
+
+	createdAt, ok := result["createdat"].(primitive.DateTime)
+	if !ok {
+		return nil, fmt.Errorf("type assertion to primitive.DateTime failed")
+	}
+
+	task := &Task{
+		ID:           result["id"].(string),
+		Description:  result["description"].(string),
+		CreatedAt:    createdAt.Time(),
+		IsComplete:   result["iscomplete"].(bool),
+		UserPasscode: result["userpasscode"].(string),
+	}
+	return task, nil
+}
+
 func NewTaskRepo() (*TaskRepo, error) {
 	client, err := GetClient()
 	if err != nil {
 		return nil, err
 	}
 	return &TaskRepo{db: client}, nil
+}
+
+func GetATask(userPasscode string, taskId string) (*Task, error) {
+	repo, err := NewTaskRepo()
+	if err != nil {
+		log.Fatalf("error getting task")
+	}
+	task, err := repo.findOneTask(userPasscode, taskId)
+	if err != nil {
+		return nil, err
+	}
+	return task, nil
+
+}
+
+func (t *TaskRepo) updateTask(task *Task) error {
+	collection := t.db.Database("todo").Collection("tasks")
+	filter := bson.D{{"id", task.ID}}
+	update := bson.D{{"$set", bson.D{{"iscomplete", task.IsComplete}}}}
+	_, err := collection.UpdateOne(context.Background(), filter, update)
+	return err
+}
+
+func CompleteTask(userPasscode string, taskId string) error {
+	repo, err := NewTaskRepo()
+	if err != nil {
+		return err
+	}
+	task, err := repo.findOneTask(userPasscode, taskId)
+	if err != nil {
+		return err
+	}
+	task.IsComplete = true
+	err = repo.updateTask(task)
+	if err != nil {
+		return err
+	}
+	fmt.Println("Task marked as complete")
+	return nil
 }
 
 // FindAllUserTasks, finds all user tasks
