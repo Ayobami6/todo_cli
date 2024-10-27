@@ -216,6 +216,26 @@ func (t *TaskRepo) updateTask(task *Task) error {
 	return err
 }
 
+func (t *TaskRepo) deleteTask(taskId string) error {
+	collection := t.db.Database("todo").Collection("tasks")
+	filter := bson.D{{"id", taskId}}
+	_, err := collection.DeleteOne(context.Background(), filter)
+	return err
+}
+
+func DeleteTask(taskId string) error {
+	repo, err := NewTaskRepo()
+	if err != nil {
+		return err
+	}
+	err = repo.deleteTask(taskId)
+	if err != nil {
+		return err
+	}
+	fmt.Println("Task deleted")
+	return nil
+}
+
 func CompleteTask(userPasscode string, taskId string) error {
 	repo, err := NewTaskRepo()
 	if err != nil {

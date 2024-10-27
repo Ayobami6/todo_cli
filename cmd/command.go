@@ -105,6 +105,19 @@ var AddCommand = &cobra.Command{
 		db.AddTask(description, passcode)
 	},
 }
+
+var DeleteCommand = &cobra.Command{
+	Use:   "delete [taskId]",
+	Short: "Delete a task",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		taskId := args[0]
+		err := db.DeleteTask(taskId)
+		if err != nil {
+			log.Fatal(err)
+		}
+	},
+}
 var ListCommand = &cobra.Command{
 	Use:   "list",
 	Short: "List all tasks",
@@ -162,5 +175,6 @@ func init() {
 	RootCmd.AddCommand(ListCommand)
 	RootCmd.AddCommand(CompleteCommand)
 	RootCmd.AddCommand(ConfigureCommand)
+	RootCmd.AddCommand(DeleteCommand)
 	ListCommand.Flags().BoolP("all", "a", false, "Show all tasks (including completed ones)")
 }
