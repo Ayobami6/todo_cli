@@ -1,3 +1,3 @@
 build:
-	@go build -o tasks
+	@go build -o bin/tasks
 
