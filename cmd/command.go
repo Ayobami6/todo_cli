@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/Ayobami6/todo_cli/db"
+	"github.com/mergestat/timediff"
+	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"golang.org/x/exp/rand"
@@ -93,7 +95,14 @@ var AddCommand = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		description := args[0]
-		db.AddTask(description)
+		// get user passcode from viper
+		passcode := viper.GetString("passcode")
+		// if not passcode
+		if passcode == "" {
+			fmt.Println("Please configure the application first")
+			return
+		}
+		db.AddTask(description, passcode)
 	},
 }
 var ListCommand = &cobra.Command{
@@ -101,6 +110,27 @@ var ListCommand = &cobra.Command{
 	Short: "List all tasks",
 	Run: func(cmd *cobra.Command, args []string) {
 		// Implement the logic to list all tasks
+		tasks, err := db.FindAllUserTasks(viper.GetString("passcode"))
+		if err != nil {
+			log.Fatal(err)
+		}
+		table := tablewriter.NewWriter(os.Stdout)
+		table.SetHeader([]string{"ID", "Task", "Created", "Done"})
+		if len(tasks) == 0 {
+			log.Fatal("tasks is empty")
+		}
+		for _, task := range tasks {
+			if !task.IsComplete {
+				row := []string{
+					(task.ID).String(),
+					task.Description,
+					timediff.TimeDiff(task.CreatedAt),
+					strconv.FormatBool(task.IsComplete),
+				}
+				table.Append(row)
+			}
+		}
+		table.Render()
 	},
 }
 var CompleteCommand = &cobra.Command{

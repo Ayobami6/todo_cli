@@ -10,16 +10,18 @@ import (
 	"time"
 
 	"github.com/Ayobami6/todo_cli/utils"
+	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type Task struct {
-	ID          int
-	Description string
-	CreatedAt   time.Time
-	IsComplete  bool
+	ID           uuid.UUID
+	Description  string
+	CreatedAt    time.Time
+	IsComplete   bool
+	UserPasscode string
 }
 
 type User struct {
@@ -120,12 +122,13 @@ func GetClient() (*mongo.Client, error) {
 	return clientInstance, err
 }
 
-func NewTask(description string) *Task {
+func NewTask(description string, userPasscode string) *Task {
 	return &Task{
-		ID:          1,
-		Description: description,
-		CreatedAt:   time.Now(),
-		IsComplete:  false,
+		ID:           uuid.New(),
+		Description:  description,
+		CreatedAt:    time.Now(),
+		IsComplete:   false,
+		UserPasscode: userPasscode,
 	}
 }
 
@@ -133,13 +136,30 @@ type TaskRepo struct {
 	db *mongo.Client
 }
 
-func (t *TaskRepo) addTask(description string) error {
+func (t *TaskRepo) addTask(description string, userPasscode string) error {
 	collection := t.db.Database("todo").Collection("tasks")
-	_, err := collection.InsertOne(context.Background(), NewTask(description))
+	_, err := collection.InsertOne(context.Background(), NewTask(description, userPasscode))
 	return err
 }
 
-//
+func (t *TaskRepo) findAll(userPasscode string) ([]Task, error) {
+	collection := t.db.Database("todo").Collection("tasks")
+	cursor, err := collection.Find(context.Background(), bson.D{{"userpasscode", userPasscode}})
+	if err != nil {
+		return nil, err
+	}
+	var tasks []Task
+	for cursor.Next(context.Background()) {
+		var task Task
+		err := cursor.Decode(&task)
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
+		tasks = append(tasks, task)
+	}
+	return tasks, nil
+}
 
 func NewTaskRepo() (*TaskRepo, error) {
 	client, err := GetClient()
@@ -149,12 +169,25 @@ func NewTaskRepo() (*TaskRepo, error) {
 	return &TaskRepo{db: client}, nil
 }
 
-func AddTask(description string) error {
+// FindAllUserTasks, finds all user tasks
+func FindAllUserTasks(userPasscode string) ([]Task, error) {
+	repo, err := NewTaskRepo()
+	if err != nil {
+		return nil, err
+	}
+	tasks, err := repo.findAll(userPasscode)
+	if err != nil {
+		return nil, err
+	}
+	return tasks, nil
+}
+
+func AddTask(description string, userPasscode string) error {
 	repo, err := NewTaskRepo()
 	if err != nil {
 		return err
 	}
-	err = repo.addTask(description)
+	err = repo.addTask(description, userPasscode)
 	if err != nil {
 		return err
 	}
